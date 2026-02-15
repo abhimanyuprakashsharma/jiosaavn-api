@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AV Music Player</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        
+        /* Search Box Design */
+        .search-box { margin-bottom: 30px; }
+        input { padding: 12px; width: 60%; border-radius: 25px; border: none; font-size: 16px; outline: none; text-align: center; }
+        button { padding: 12px 25px; border-radius: 25px; border: none; background: #e91e63; color: white; cursor: pointer; font-weight: bold; font-size: 16px; margin-left: 10px; }
+        button:hover { background: #c2185b; }
+
+        /* Song Card Design */
+        .song-card { 
+            background: #1e1e1e; 
+            padding: 20px; 
+            border-radius: 15px; 
+            display: inline-block; 
+            max-width: 300px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        h2 { margin: 10px 0 5px; font-size: 18px; color: #fff; }
+        p { color: #aaa; margin: 0 0 15px; font-size: 14px; }
+        
+        /* Audio Player Styling */
+        audio { width: 100%; outline: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1 style="color: #e91e63;">🎵 AV Music Vibes</h1>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search song (e.g. Arjan Vailly)">
+        <button onclick="searchSong()">Search</button>
+    </div>
+
+    <div id="player" class="song-card" style="display:none;">
+        <img id="thumb" src="" alt="Song Art">
+        <h2 id="title">Song Name</h2>
+        <p id="artist">Artist</p>
+        <audio id="audioPlayer" controls autoplay></audio>
+    </div>
+
+    <script>
+        async function searchSong() {
+            let query = document.getElementById('searchInput').value;
+            
+            // ---------------------------------------------------------
+            // ✅ TUMHARA SERVER URL YAHAN SET HAI:
+            const myApi = "https://jiosaavn-api-ruddy-chi.vercel.app"; 
+            // ---------------------------------------------------------
+
+            if(!query) return alert("Bhai kuch likho to sahi!");
+
+            // Button ka text change kar rahe hain taki lage process ho raha hai
+            const btn = document.querySelector("button");
+            btn.innerText = "Searching...";
+
+            try {
+                // Tumhare API server se data mangwana
+                let response = await fetch(`${myApi}/search/songs?query=${query}&limit=1`);
+                let data = await response.json();
+                
+                if(data.status === "SUCCESS" && data.data.results.length > 0) {
+                    let song = data.data.results[0]; 
+
+                    // Screen par data dikhana
+                    document.getElementById('player').style.display = 'inline-block';
+                    
+                    // Song Name decoding (kabhi kabhi ajeeb characters aa jate hain)
+                    document.getElementById('title').innerHTML = song.name;
+                    document.getElementById('artist').innerHTML = song.primaryArtists;
+                    
+                    // Best quality image nikalna
+                    let imgUrl = song.image[2] ? song.image[2].link : song.image[0].link;
+                    document.getElementById('thumb').src = imgUrl;
+                    
+                    // Best quality audio nikalna
+                    let audioUrl = song.downloadUrl[4] ? song.downloadUrl[4].link : song.downloadUrl[0].link;
+                    document.getElementById('audioPlayer').src = audioUrl;
+
+                } else {
+                    alert("Song nahi mila yaar! Spelling check karo.");
+                }
+
+            } catch (error) {
+                console.log(error);
+                alert("Koi gadbad hai! Shayad API abhi response nahi de rahi.");
+            }
+
+            // Button wapas normal karna
+            btn.innerText = "Search";
+        }
+    </script>
+</body>
+</html>
