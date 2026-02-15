@@ -7,13 +7,11 @@
     <style>
         body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
         
-        /* Search Box Design */
         .search-box { margin-bottom: 30px; }
         input { padding: 12px; width: 60%; border-radius: 25px; border: none; font-size: 16px; outline: none; text-align: center; }
         button { padding: 12px 25px; border-radius: 25px; border: none; background: #e91e63; color: white; cursor: pointer; font-weight: bold; font-size: 16px; margin-left: 10px; }
         button:hover { background: #c2185b; }
 
-        /* Song Card Design */
         .song-card { 
             background: #1e1e1e; 
             padding: 20px; 
@@ -27,7 +25,6 @@
         h2 { margin: 10px 0 5px; font-size: 18px; color: #fff; }
         p { color: #aaa; margin: 0 0 15px; font-size: 14px; }
         
-        /* Audio Player Styling */
         audio { width: 100%; outline: none; margin-top: 10px; }
     </style>
 </head>
@@ -36,7 +33,7 @@
     <h1 style="color: #e91e63;">🎵 AV Music Vibes</h1>
     
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search song (e.g. Arjan Vailly)">
+        <input type="text" id="searchInput" placeholder="Search song (e.g. Talwiinder)">
         <button onclick="searchSong()">Search</button>
     </div>
 
@@ -51,50 +48,50 @@
         async function searchSong() {
             let query = document.getElementById('searchInput').value;
             
-            // ---------------------------------------------------------
-            // ✅ TUMHARA SERVER URL YAHAN SET HAI:
-            const myApi = "https://jiosaavn-api-ruddy-chi.vercel.app"; 
-            // ---------------------------------------------------------
+            // ✅ FIX: URL me /api add kiya hai
+            const myApi = "https://jiosaavn-api-ruddy-chi.vercel.app/api"; 
 
             if(!query) return alert("Bhai kuch likho to sahi!");
 
-            // Button ka text change kar rahe hain taki lage process ho raha hai
             const btn = document.querySelector("button");
             btn.innerText = "Searching...";
 
             try {
-                // Tumhare API server se data mangwana
+                // ✅ FIX: Path ab /search/songs hai
                 let response = await fetch(`${myApi}/search/songs?query=${query}&limit=1`);
                 let data = await response.json();
                 
-                if(data.status === "SUCCESS" && data.data.results.length > 0) {
+                // ✅ FIX: Naye API me data 'data.results' ke andar nahi, seedha 'data.data.results' me hota hai
+                if(data.success && data.data.results.length > 0) {
                     let song = data.data.results[0]; 
 
-                    // Screen par data dikhana
                     document.getElementById('player').style.display = 'inline-block';
                     
-                    // Song Name decoding (kabhi kabhi ajeeb characters aa jate hain)
-                    document.getElementById('title').innerHTML = song.name;
-                    document.getElementById('artist').innerHTML = song.primaryArtists;
+                    // Decode Names (HTML entities fix)
+                    const tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = song.name;
+                    document.getElementById('title').innerText = tempDiv.innerText;
                     
-                    // Best quality image nikalna
-                    let imgUrl = song.image[2] ? song.image[2].link : song.image[0].link;
+                    tempDiv.innerHTML = song.primaryArtists || song.artists.primary[0].name;
+                    document.getElementById('artist').innerText = tempDiv.innerText;
+                    
+                    // Image Handling (Best Quality)
+                    let imgUrl = song.image.find(i => i.quality === "500x500")?.link || song.image[0].link;
                     document.getElementById('thumb').src = imgUrl;
                     
-                    // Best quality audio nikalna
-                    let audioUrl = song.downloadUrl[4] ? song.downloadUrl[4].link : song.downloadUrl[0].link;
+                    // Audio Handling (Best Quality)
+                    let audioUrl = song.downloadUrl.find(u => u.quality === "320kbps")?.link || song.downloadUrl[0].link;
                     document.getElementById('audioPlayer').src = audioUrl;
 
                 } else {
-                    alert("Song nahi mila yaar! Spelling check karo.");
+                    alert("Song nahi mila! Spelling check karo.");
                 }
 
             } catch (error) {
                 console.log(error);
-                alert("Koi gadbad hai! Shayad API abhi response nahi de rahi.");
+                alert("Error! Console check karo (F12 dabake).");
             }
 
-            // Button wapas normal karna
             btn.innerText = "Search";
         }
     </script>
